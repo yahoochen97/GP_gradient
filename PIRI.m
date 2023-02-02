@@ -59,78 +59,57 @@ y = data.PIRI;
 
 % init hyperparameter and define model
 
-% group trend
-group_length_scale = 7;
-group_output_scale = 0.5;
+% unit mean
 meanfunction = {@meanMask, [0,1,0,0,0,0,0,0], {@meanDiscrete, n}};
 theta.mean = zeros(n,1);
 for i=1:n
     tmp = y(strcmp(data.country,countries{i}));
-    theta.mean(i) = mean(log(tmp(tmp~=0)));
+    theta.mean(i) = mean(tmp);
 end
 
-% time covariance for group trends
-time_covariance = {@covMask, {1, {@covSEiso}}};
-theta.cov = [log(group_length_scale); ...      % 1
-             log(group_output_scale)];         % 2
-
-% nonlinear unit trend
-unit_length_scale = 14;
+% unit trend
+unit_length_scale = 4;
 unit_output_scale = 0.5;
 unit_error_covariance = {@covProd, {{@covMask, {1, {@covSEiso}}}, ...
                                     {@covMask, {2, {@covSEisoU}}}}};
-theta.cov = [theta.cov; ...
-             log(unit_length_scale); ... % 3
-             log(unit_output_scale); ... % 4
-             log(0.01)];                 % 5
-         
-% marginalize unit mean
-unit_mean_std = 0.5;
-unit_mean_covariance = {@covMask, {2, {@covSEiso}}};
-
-theta.cov = [theta.cov; ...
-             log(0.01); ...              % 6
-             log(unit_mean_std)];        % 7
+theta.cov = [log(unit_length_scale); ... % 1
+             log(unit_output_scale); ... % 2
+             log(0.01)];                 % 3
          
 % covariate effect (continuous)
 % log(gdppc) and log(pop)
 x_continuous_covariance = {@covMask, {[7,8], {@covSEard}}};
 theta.cov = [theta.cov; ...
-             log(std(log(data.gdppc)));...% 8
-             log(std(log(data.pop))); ...% 9
-             log(1)];                    % 10
+             log(std(log(data.gdppc)));...% 4
+             log(std(log(data.pop))); ...% 5
+             log(0.5)];                  % 6
 
 % covariate effect (binary)
 % cat_rat, ccpr_rat and democratic
 x_binary_covariance = {@covMask, {[4,5,6], {@covSEard}}};
 theta.cov = [theta.cov; ...
-             log(0.01); ...              % 11
-             log(0.01); ...              % 12
-             log(0.01); ...              % 13
-             log(1)];                    % 14
+             log(0.01); ...              % 7
+             log(0.01); ...              % 8
+             log(0.01); ...              % 9
+             log(0.5)];                  % 10
          
 % treatment effect (AIShame) 
 AIShame_covariance = {@covMask, {[3], {@covSEiso}}};
 theta.cov = [theta.cov; ...
-             log(0.01); ...              % 15
-             log(1)];                    % 16
+             log(0.01); ...              % 11
+             log(0.5)];                  % 12
 
 
-covfunction = {@covSum, {time_covariance, unit_mean_covariance, ...
-            unit_error_covariance, x_continuous_covariance, ...
+covfunction = {@covSum, {unit_error_covariance, x_continuous_covariance, ...
             x_binary_covariance, AIShame_covariance}};
 
-likfunction = {@likPoisson,'exp'};
-% likfunction = {@likGauss};
-theta.lik = [];
+% likfunction = {@likPoisson,'exp'};
+likfunction = {@likGauss};
+theta.lik = [log(0.05)];
 
-prior.cov  = {{@priorTransform,@exp,@exp,@log,{@priorGamma,10,2}}, ... 
+prior.cov  = {[], ...
               [], ...
-              {@priorTransform,@exp,@exp,@log,{@priorGamma,10,2}}, ...
               [], ...
-              @priorDelta, ...
-              @priorDelta, ...
-              @priorDelta, ... 
               [],...
               [],...
               [],...
@@ -140,18 +119,18 @@ prior.cov  = {{@priorTransform,@exp,@exp,@log,{@priorGamma,10,2}}, ...
               [], ...
               @priorDelta, ...
               []};  
-prior.lik  = {};
+prior.lik  = {[]};
 prior.mean = cell(n,1);
 prior.mean(:) = {@priorDelta};
 
-inference_method = {@infPrior, @infLaplace, prior};
-non_drift_idx = [2, 4, 7, 10, 14];
+inference_method = {@infPrior, @infExact, prior};
+non_drift_idx = [2, 6, 10];
 p.method = 'LBFGS';
 p.length = 100;
 
 theta = minimize_v2(theta, @gp, p, inference_method, meanfunction, ...
-                    covfunction, likfunction, x, y);
-                
+                     covfunction, likfunction, x, y);
+    
 % AIShame prior
 theta_drift = theta;
 theta_drift.cov(non_drift_idx) = log(0);
@@ -159,8 +138,7 @@ m_drift = feval(meanfunction{:}, theta_drift.mean, x)*0;
 K_drift = feval(covfunction{:}, theta_drift.cov, x);
 
 % AIShame posterior
-[post, ~, ~] = infLaplace(theta, meanfunction, covfunction, likfunction, x, y);
-% [post, ~, ~] = infExact(theta, meanfunction, covfunction, likfunction, x, y);
+[post, ~, ~] = infExact(theta, meanfunction, covfunction, likfunction, x, y);
 
 m_post = m_drift + K_drift*post.alpha;
 tmp = K_drift.*post.sW;
@@ -169,3 +147,38 @@ K_post = K_drift - tmp'*solve_chol(post.L, tmp);
 % AIShame effect
 effect =  mean(m_post(data.AIShame==1)) - mean(m_post(data.AIShame==0));
 effect_std =  sqrt(mean(diag(K_post)));
+
+% unit trend prior
+theta_drift = theta;
+theta_drift.cov([6, 10, 12]) = log(0);
+m_drift = feval(meanfunction{:}, theta_drift.mean, x);
+K_drift = feval(covfunction{:}, theta_drift.cov, x);
+
+m_post = m_drift + K_drift*post.alpha;
+tmp = K_drift.*post.sW;
+K_post = K_drift - tmp'*solve_chol(post.L, tmp);
+K_post = diag(K_post);
+
+unit_post_mu = zeros(n,m);
+unit_post_std = zeros(n,m);
+for i=1:n
+    for j=1:m
+       tmp = (strcmp(data.country,countries{i}) & data.year==years(j));
+       if numel(m_post(tmp))~=0
+           unit_post_mu(i,j) = m_post(tmp);
+           unit_post_std(i,j) = sqrt(K_post(tmp));
+       end
+    end
+end
+
+% plot a few unit trends
+[~,idx] = maxk(mean(treated,2),10);
+for i = idx'
+    fig = figure(i);
+    clf;
+    days = arrayfun(@(x) year_dict(x), data.year(strcmp(data.country,countries{i})));
+    plot(days, unit_post_mu(i,days)); hold on;
+    scatter(days, y(strcmp(data.country,countries{i})));
+    title(countries{i});
+    ylim([0,9]);
+end
