@@ -107,10 +107,10 @@ def load_PIRI_data():
     for i in range(n):
         unit_means[i] = y[x[:,1]==i].mean()
 
-    return x.double(), y.double(), unit_means.double()
+    return x.double(), y.double(), unit_means.double(), data, countries, years
 
 def main():
-    train_x, train_y, unit_means = load_PIRI_data()
+    train_x, train_y, unit_means, data, countries, years = load_PIRI_data()
 
     # define likelihood and derivativeExactGP model
     likelihood = GaussianLikelihood()
@@ -175,7 +175,7 @@ def main():
         optimizer.step()
     
     # generate posterior of PIRI effects
-    full_model_state = model.state_dict()
+    torch.save(model.state_dict(), "PIRI_GPR_model.pth")
 
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
         out = likelihood(model(train_x))
@@ -199,12 +199,45 @@ def main():
     # get posterior effect covariance
     post_effect_covar = effect_covar - tmp.t() @ tmp
 
+    effect_p = post_effect_mean[train_x[:,2]==1].mean().item()
+    effect_n = post_effect_mean[train_x[:,2]==0].mean().item()
     effect = post_effect_mean[train_x[:,2]==1].mean() - post_effect_mean[train_x[:,2]==0].mean()
     effect_std = post_effect_covar.diag().mean().sqrt()
     BIC = (2+3+6+1)*torch.log(torch.tensor(train_x.size()[0])) + 2*loss*train_x.size()[0]
     print("effect: {:0.3f} +- {:0.3f}\n".format(effect, effect_std))
     print("model evidence: {:0.3f} \n".format(-loss*train_x.size()[0]))
     print("BIC: {:0.3f} \n".format(BIC))
+
+    # get unit trend wo AIShame
+    model.load_state_dict(torch.load('PIRI_GPR_model.pth'))
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        model.effect_covar_module.outputscale = 0
+        unit_covar = likelihood(model(train_x)).covariance_matrix
+
+     # get posterior unit trend mean
+    alpha = torch.linalg.solve(L.t(),torch.linalg.solve(L,train_y-mu_f))
+    tmp = torch.linalg.solve(L, unit_covar)
+    post_unit_mean = mu_f + unit_covar @ alpha
+    # get posterior unit trend covariance
+    post_unit_covar = unit_covar - tmp.t() @ tmp
+    post_unit_covar = post_unit_covar.diag()
+
+    # country-year post mu/std w/wo AIShame
+    n = len(countries)
+    m = len(years)
+    results = pd.DataFrame(columns=['country',\
+                     'year','PIRI','mu_D0','mu_D1', 'std','AIShame'])
+    for i in range(n):
+        for j in range(m):
+            mask = (data.country==countries[i]) & (data.year==years[j])
+            mask = mask.to_list()
+            if sum(mask)>0:
+                D = train_x[mask,2].item()
+                mu = post_unit_mean[mask].item()
+                results.loc[len(results)] = [countries[i],years[j], train_y[mask].item(),\
+                    mu+effect_n, mu+effect_p, \
+                    torch.sqrt(post_unit_covar[mask]).item(),D] 
+    results.to_csv("./results/PIRI_GP_unit.csv", index=False)
 
 if __name__ == "__main__":
     main()
