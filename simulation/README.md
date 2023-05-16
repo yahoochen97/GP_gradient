@@ -26,6 +26,24 @@ $K_x(x,x')=\rho^2_x\exp(-\frac{1}{2\ell^2_1}(x_1-x'_1)^2-\frac{1}{2\ell^2_2}(x_2
 
 $K_t(t_1,t_2)=\rho^2_t\exp(-\frac{1}{2\ell^2_t}(t_1-t_2)^2), \quad K_i(i,i')=1 \text{ if } i==i' \text{ else } 0$.
 
+In this simulation we focus on static marginal effect and hence decompose the kernel structure of the sum of covariate kernel and time kernel. The model can be easily improved by implementing a joint kernel of covariate and time. We also simply use a zero mean function yet the posterior may be highly non-linear, but can also be replaced by other mean function.
+
+
 ### Baselines
 
+We compare our model with several baselines, including the standard two-way fixed effect model, two-way random effect model and the autoregression model. We implement all these models in our Gaussian process framework.
+
+1. Two-way fixed effect model:
+
+$y_{it}=\beta_1 * x_{i1}+\beta_2 * x_{i2} + a_i + b_t + \varepsilon$
+
+2. Two-way random effect model:
+
+$y_{it}=\beta_1 * x_{i1}+\beta_2 * x_{i2} + a_i + b_t + \varepsilon$
+
+$a_i\sim\mathcal{N}(0,\sigma^2_a), \quad b_t\sim\mathcal{N}(0,\sigma^2_b)$
+
+3. Autoregression model of order 1:
+
+$y_{it}=\beta_1 * x_{i1}+\beta_2 * x_{i2} + \rho * y_{i(t-1)} + \varepsilon$
 
