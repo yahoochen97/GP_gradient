@@ -12,7 +12,7 @@ if [ $1 = "run" ]
 then
     for SEED in $(seq 1 1 $MAXSEED); do
         for MODEL in ${MODELS[@]}; do
-            bsub -G SEAS-Lab-Garnett -J "SEED${SEED}" "./onerun $SEED $N $T $MODEL"
+            bsub -G SEAS-Lab-Garnett -J "${MODEL}SEED${SEED}" "./onerun $SEED $N $T $MODEL"
         done
     done
 elif [ $1 = "summary" ]
