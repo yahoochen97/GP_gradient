@@ -1,0 +1,21 @@
+#!/bin/bash
+
+mkdir -p results
+
+MAXSEED=25
+N=50
+T=20
+
+declare -a MODELS=("2FE" "2RE" "GPR")
+
+if [ $1 = "run" ]
+then
+    for SEED in $(seq 1 1 $MAXSEED); do
+        for MODEL in ${MODELS[@]}; do
+            bsub -G SEAS-Lab-Garnett -J "SEED${SEED}" "./onerun $SEED $N $T $MODEL"
+        done
+    done
+elif [ $1 = "summary" ]
+then
+    python utility/summary.py -N ${N} -T ${T} -s ${MAXSEED}
+fi

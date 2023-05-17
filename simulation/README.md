@@ -6,7 +6,7 @@ Suppose we observe outcomes of $N=50$ respondents across $T=20$ different time p
 
 $x_{id}\sim \mathcal{N}(0,1),\quad d=1,2$
 
-$y_{it}=f(x_i)+g_i(t)+\varepsilon,\quad \varepsilon\sim\mathcal{N}(0,1)$
+$y_{it}=f(x_i)+g_i(t)+\varepsilon,\quad \varepsilon\sim\mathcal{N}(0,0.1)$
 
 $f(x_i)=x^2_{i1}-x_{i1}*x_{i2}$
 
@@ -43,7 +43,4 @@ $y_{it}=\beta_1 * x_{i1}+\beta_2 * x_{i2} + a_i + b_t + \varepsilon$
 
 $a_i\sim\mathcal{N}(0,\sigma^2_a), \quad b_t\sim\mathcal{N}(0,\sigma^2_b)$
 
-3. Autoregression model of order 1:
-
-$y_{it}=\beta_1 * x_{i1}+\beta_2 * x_{i2} + \rho * y_{i(t-1)} + \varepsilon$
 
