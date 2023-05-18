@@ -68,13 +68,17 @@ N <- nrow(df_group)
 # item discriminations
 #beta <- rep(1.5, J)
 
+# add unit-level variation to lat/long
+df_group["latitude"] = df_group["latitude"] + rnorm(N, 0, 0.1)
+df_group["longitude"] = df_group["longitude"] + rnorm(N, 0, 0.1)
+
 ## Create design matrix without omitted levels
 cont.list <- lapply(df_group[,2:3], contrasts, contrasts=FALSE)
 X_mat <- model.matrix(~latitude + longitude + gender + race + year -1,
                       data = df_group,
                       contrasts.arg = cont.list)
 ## Compute kernel
-rho <- c(.02,.02,rep(2.0,8),.05)
+rho <- c(.5,.5,rep(2.0,8),.5)
 K <- K_comp(t(X_mat), log(rho))
 
 ## Sample theta from GP
