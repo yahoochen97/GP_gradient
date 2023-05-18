@@ -18,5 +18,5 @@ then
     python 2RE.py -N ${N} -T ${T} -s ${SEED}
 elif [ $MODEL = "GPR" ]
 then
-    python GRP.py -N ${N} -T ${T} -s ${SEED}
+    python gpr.py -N ${N} -T ${T} -s ${SEED}
 fi

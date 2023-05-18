@@ -7,6 +7,7 @@ N=50
 T=20
 
 declare -a MODELS=("2FE" "2RE" "GPR")
+declare -a MODELS=("GPR")
 
 if [ $1 = "run" ]
 then
