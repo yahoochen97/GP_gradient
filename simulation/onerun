@@ -2,6 +2,7 @@
 #BSUB -n 1
 #BSUB -R "span[hosts=1]"
 
+source /project/engineering/conda/pytorch-mpi-23.setup.sh
 mkdir -p /export/cluster-tmp/chenyehu
 export TMPDIR=/export/cluster-tmp/chenyehu
 
