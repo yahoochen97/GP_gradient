@@ -17,13 +17,13 @@ import pyro
 from pyro.infer.mcmc import NUTS, MCMC
 import os
 smoke_test = ('CI' in os.environ)
-num_samples = 2 if smoke_test else 5
-warmup_steps = 2 if smoke_test else 5
+num_samples = 2 if smoke_test else 100
+warmup_steps = 2 if smoke_test else 100
 torch.set_default_dtype(torch.float64)
 
 def load_PIRI_data():
     # read data
-    url = "https://raw.githubusercontent.com/yahoochen97/GP_gradient/main/hb_data_complete.csv"
+    url = "http://raw.githubusercontent.com/yahoochen97/GP_gradient/main/hb_data_complete.csv"
     data = pd.read_csv(url, index_col=[0])
 
     # all zero PIRI for new zealand and netherland
