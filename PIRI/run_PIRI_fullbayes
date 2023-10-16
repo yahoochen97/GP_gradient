@@ -1,0 +1,4 @@
+#!/bin/bash
+
+module add seas-anaconda3
+bsub -G SEAS-Lab-Garnett -o "PIRI_fullbayes.log" -J "PIRI fullbayes" "python PIRI_GPR_fullbayes.py"
