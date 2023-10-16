@@ -23,8 +23,8 @@ torch.set_default_dtype(torch.float64)
 
 def load_PIRI_data():
     # read data
-    url = "http://raw.githubusercontent.com/yahoochen97/GP_gradient/main/hb_data_complete.csv"
-    data = pd.read_csv(url, index_col=[0])
+    # url = "http://raw.githubusercontent.com/yahoochen97/GP_gradient/main/hb_data_complete.csv"
+    data = pd.read_csv("hb_data_complete.csv", index_col=[0])
 
     # all zero PIRI for new zealand and netherland
     data = data.loc[~data['country'].isin(['N-ZEAL','NETHERL'])]
