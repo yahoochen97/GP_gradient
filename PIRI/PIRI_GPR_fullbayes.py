@@ -29,8 +29,6 @@ def load_PIRI_data():
     # all zero PIRI for new zealand and netherland
     data = data.loc[~data['country'].isin(['N-ZEAL','NETHERL'])]
 
-    # data = data.loc[data['country'].isin(['CHINA','USA','GERMANY','CANADA'])]
-
     countries = sorted(data.country.unique())
     years = data.year.unique()
     n = len(countries)
