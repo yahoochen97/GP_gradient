@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from gpytorch.means import LinearMean
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.kernels import ScaleKernel, RBFKernel
-from gpytorch.priors import GammaPrior, LogNormalPrior
+from gpytorch.priors import GammaPrior
 
 # load pyro packages
 import pyro
@@ -163,11 +163,11 @@ model.mean_module.base_mean.constantvector.requires_grad = False
 model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad = False
 
 # register priors
-model.unit_covar_module.register_prior("outputscale_prior", GammaPrior(4.0, 1.), "outputscale")
-model.unit_covar_module.base_kernel.kernels[0].register_prior("lengthscale_prior", GammaPrior(6., 1.), "lengthscale")
+model.unit_covar_module.register_prior("outputscale_prior", GammaPrior(1.0, 1.), "outputscale")
+model.unit_covar_module.base_kernel.kernels[0].register_prior("lengthscale_prior", GammaPrior(2., 1.), "lengthscale")
 model.x_covar_module.base_kernel.register_prior("lengthscale_prior", GammaPrior(1., 1.), "lengthscale")
 model.x_covar_module.register_prior("outputscale_prior", GammaPrior(1., 1.), "outputscale")
-likelihood.register_prior("noise_prior", LogNormalPrior(0., 1.0), "noise")
+likelihood.register_prior("noise_prior", GammaPrior(1., 1.0), "noise")
 
 # Initialize with MAP
 model.train()
@@ -180,12 +180,12 @@ all_params = set(model.parameters())
 final_params = list(all_params - \
             {model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale, \
             model.mean_module.base_mean.constantvector})
-optimizer = torch.optim.Adam(final_params, lr=0.1)
+optimizer = torch.optim.Adam(final_params, lr=0.05)
 
 # "Loss" for GPs - the marginal log likelihood
 mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-training_iter = 200
+training_iter = 100
 for i in range(training_iter):
     optimizer.zero_grad()
     output = model(train_x)
@@ -256,6 +256,8 @@ for iter in range(num_samples):
     sampled_dydtest_x = np.zeros((n_samples, train_x.size(0),train_x.size(1)))
 
     # we proceed in small batches of size 100 for speed up
+    print(iter)
+
     for i in range(train_x.size(0)//100):
         with gpytorch.settings.fast_pred_var():
             test_x = train_x[(i*100):(i*100+100)].clone().detach().requires_grad_(True)
