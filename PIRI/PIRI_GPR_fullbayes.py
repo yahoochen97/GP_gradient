@@ -17,8 +17,8 @@ import pyro
 from pyro.infer.mcmc import NUTS, MCMC
 import os
 smoke_test = ('CI' in os.environ)
-num_samples = 2 if smoke_test else 50
-warmup_steps = 2 if smoke_test else 50
+num_samples = 2 if smoke_test else 500
+warmup_steps = 2 if smoke_test else 500
 torch.set_default_dtype(torch.float64)
 
 def load_PIRI_data():
@@ -144,6 +144,11 @@ class GPModel(gpytorch.models.ExactGP):
 
 likelihood = GaussianLikelihood(noise_constraint=gpytorch.constraints.Positive())
 model = GPModel(train_x, train_y, likelihood).double()
+
+train_x = train_x.cuda()
+train_y = train_y.cuda()
+model = model.cuda()
+likelihood = likelihood.cuda()
 
 # initialize model parameters
 hypers = {
