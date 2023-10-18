@@ -17,8 +17,8 @@ import pyro
 from pyro.infer.mcmc import NUTS, MCMC
 import os
 smoke_test = ('CI' in os.environ)
-num_samples = 2 if smoke_test else 100
-warmup_steps = 2 if smoke_test else 100
+num_samples = 2 if smoke_test else 50
+warmup_steps = 2 if smoke_test else 50
 torch.set_default_dtype(torch.float64)
 
 def load_PIRI_data():
