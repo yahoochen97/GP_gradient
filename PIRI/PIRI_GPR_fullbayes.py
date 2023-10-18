@@ -145,11 +145,6 @@ class GPModel(gpytorch.models.ExactGP):
 likelihood = GaussianLikelihood(noise_constraint=gpytorch.constraints.Positive())
 model = GPModel(train_x, train_y, likelihood).double()
 
-train_x = train_x.cuda()
-train_y = train_y.cuda()
-model = model.cuda()
-likelihood = likelihood.cuda()
-
 # initialize model parameters
 hypers = {
     'mean_module.base_mean.constantvector': unit_means,
