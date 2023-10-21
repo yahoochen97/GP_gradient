@@ -125,18 +125,18 @@ class GPModel(gpytorch.models.ExactGP):
         self.likelihood = likelihood
 
         # constant country-level mean; fix; no prior
-        self.mean_module = MaskMean(active_dims=1, \
-               base_mean=ConstantVectorMean(d=train_x[:,1].unique().size()[0]))
+        # self.mean_module = MaskMean(active_dims=1, \
+        #        base_mean=ConstantVectorMean(d=train_x[:,1].unique().size()[0]))
         
         # linear mean for continuous and binary covariates
-        self.x_mean_module = MaskMean(active_dims=[2,3,4,5,6,7,8,9], base_mean=LinearMean(input_size=8, bias=False))
-        
+        # self.x_mean_module = MaskMean(active_dims=[2,3,4,5,6,7,8,9], base_mean=LinearMean(input_size=8, bias=False))
+        self.mean_module = gpytorch.means.ZeroMean()
         # unit level trend: year kernel * country kernel
         self.unit_covar_module = ScaleKernel(RBFKernel(active_dims=0)*RBFKernel(active_dims=1))
         self.x_covar_module = ScaleKernel(RBFKernel(active_dims=[2,3,4,5,6,7,8,9],ard_num_dims=8))
 
     def forward(self, x):
-        mean_x = self.mean_module(x) + self.x_mean_module(x)
+        mean_x = self.mean_module(x) # + self.x_mean_module(x)
         unit_covar_x = self.unit_covar_module(x)
         covar_x = unit_covar_x + self.x_covar_module(x)
         
@@ -147,8 +147,8 @@ model = GPModel(train_x, train_y, likelihood).double()
 
 # initialize model parameters
 hypers = {
-    'mean_module.base_mean.constantvector': unit_means,
-    'x_mean_module.base_mean.weights': torch.tensor(x_weights),
+    # 'mean_module.base_mean.constantvector': unit_means,
+    # 'x_mean_module.base_mean.weights': torch.tensor(x_weights),
     'likelihood.noise_covar.noise': torch.tensor(0.5),
     'unit_covar_module.base_kernel.kernels.0.lengthscale': torch.tensor(6.),
     'unit_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor(0.01),
@@ -159,7 +159,7 @@ hypers = {
 model = model.initialize(**hypers)
 
 # fix constant prior mean
-model.mean_module.base_mean.constantvector.requires_grad = False
+# model.mean_module.base_mean.constantvector.requires_grad = False
 model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad = False
 
 # register priors
@@ -178,8 +178,9 @@ torch.manual_seed(12345)
 # freeze constant unit means
 all_params = set(model.parameters())
 final_params = list(all_params - \
-            {model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale, \
-            model.mean_module.base_mean.constantvector})
+            {model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale})
+#, \
+#            model.mean_module.base_mean.constantvector})
 optimizer = torch.optim.Adam(final_params, lr=0.05)
 
 # "Loss" for GPs - the marginal log likelihood
@@ -209,10 +210,10 @@ def pyro_model(x, y):
     pyro.sample("obs", output, obs=y)
 
 # print("loading mcmc run from disk...")
-# with open('./results/PIRI_GPR_fullbayes.pkl', 'rb') as f:
+# with open('./results/PIRI_GPR_fullbayes_500.pkl', 'rb') as f:
 #     mcmc_run = dill.load(f)
 
-nuts_kernel = NUTS(pyro_model)  
+nuts_kernel = NUTS(pyro_model)
 mcmc_run = MCMC(nuts_kernel, num_samples=num_samples,\
             warmup_steps=warmup_steps, disable_progbar=smoke_test,\
             num_chains=1)
