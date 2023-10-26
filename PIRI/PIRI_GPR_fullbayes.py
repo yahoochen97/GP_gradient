@@ -17,8 +17,8 @@ import pyro
 from pyro.infer.mcmc import NUTS, MCMC
 import os
 smoke_test = ('CI' in os.environ)
-num_samples = 2 if smoke_test else 500
-warmup_steps = 2 if smoke_test else 500
+num_samples = 2 if smoke_test else 100
+warmup_steps = 2 if smoke_test else 100
 torch.set_default_dtype(torch.float64)
 
 def load_PIRI_data():
@@ -205,12 +205,14 @@ likelihood.train()
 pyro.set_rng_seed(12345)
 
 def pyro_model(x, y):
-    sampled_model = model.pyro_sample_from_prior()
-    output = sampled_model.likelihood(sampled_model(x))
-    pyro.sample("obs", output, obs=y)
+    with gpytorch.settings.fast_computations(False, False, False):
+        sampled_model = model.pyro_sample_from_prior()
+        output = sampled_model.likelihood(sampled_model(x))
+        pyro.sample("obs", output, obs=y)
+    return y
 
 # print("loading mcmc run from disk...")
-# with open('./results/PIRI_GPR_fullbayes_500.pkl', 'rb') as f:
+# with open('./results/PIRI_GPR_fullbayes.pkl', 'rb') as f:
 #     mcmc_run = dill.load(f)
 
 nuts_kernel = NUTS(pyro_model)
