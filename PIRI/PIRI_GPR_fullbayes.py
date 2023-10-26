@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from gpytorch.means import LinearMean
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.kernels import ScaleKernel, RBFKernel
-from gpytorch.priors import GammaPrior
+from gpytorch.priors import GammaPrior, UniformPrior
 
 # load pyro packages
 import pyro
@@ -163,11 +163,11 @@ model = model.initialize(**hypers)
 model.unit_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad = False
 
 # register priors
-model.unit_covar_module.register_prior("outputscale_prior", GammaPrior(1.0, 1.), "outputscale")
-model.unit_covar_module.base_kernel.kernels[0].register_prior("lengthscale_prior", GammaPrior(2., 1.), "lengthscale")
-model.x_covar_module.base_kernel.register_prior("lengthscale_prior", GammaPrior(1., 1.), "lengthscale")
-model.x_covar_module.register_prior("outputscale_prior", GammaPrior(1., 1.), "outputscale")
-likelihood.register_prior("noise_prior", GammaPrior(1., 1.0), "noise")
+model.unit_covar_module.register_prior("outputscale_prior", UniformPrior(0.01, 9.), "outputscale")
+model.unit_covar_module.base_kernel.kernels[0].register_prior("lengthscale_prior", UniformPrior(0.01, 25.), "lengthscale")
+model.x_covar_module.base_kernel.register_prior("lengthscale_prior", UniformPrior(0.01, 25.), "lengthscale")
+model.x_covar_module.register_prior("outputscale_prior", UniformPrior(0.01, 9.), "outputscale")
+likelihood.register_prior("noise_prior", UniformPrior(0.01, 4.), "noise")
 
 # Initialize with MAP
 model.train()
@@ -197,6 +197,11 @@ for i in range(training_iter):
             i , training_iter, loss.item()
         ))
     optimizer.step()
+
+jitter = 1
+with torch.no_grad():
+    for name, param in model.named_parameters():
+        param.add_(jitter*torch.randn(param.shape))
 
 # train model
 model.train()
