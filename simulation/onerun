@@ -17,6 +17,9 @@ then
 elif [ $MODEL = "2RE" ]
 then
     python 2RE.py -N ${N} -T ${T} -s ${SEED}
+elif [ $MODEL = "FULLBAYES" ]
+then
+    python gpr_fullbayes.py -N ${N} -T ${T} -s ${SEED}
 elif [ $MODEL = "GPR" ]
 then
     python gpr.py -N ${N} -T ${T} -s ${SEED}
