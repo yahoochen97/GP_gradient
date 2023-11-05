@@ -6,6 +6,8 @@ source /project/engineering/conda/pytorch-mpi-23.setup.sh
 mkdir -p /export/cluster-tmp/chenyehu
 export TMPDIR=/export/cluster-tmp/chenyehu
 
+module add seas-lab-vorobeychik
+
 SEED=$1
 N=$2
 T=$3
