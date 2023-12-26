@@ -8,7 +8,7 @@ def main(args):
     N = int(args["num_units"])
     T = int(args["num_times"])
     MAXSEED = int(args["seed"])
-    MODELS = ["2FE", "2RE", "GPR"]
+    MODELS = ["2FE", "2RE", "GPR", "FULLBAYES"]
 
     results = np.zeros((len(MODELS),2+2+2,MAXSEED))
     for SEED in range(1,MAXSEED+1):
