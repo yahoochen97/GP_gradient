@@ -10,6 +10,7 @@ from gpytorch.variational import VariationalStrategy
 # LOAD PACKAGES
 import torch
 import gpytorch
+import time
 
 class BinomialGPModel(gpytorch.models.ApproximateGP):
     def __init__(self, train_x):
@@ -129,4 +130,7 @@ def generate_data(n,T,m):
     return torch.from_numpy(x), torch.from_numpy(y), f_min, f_max
             
 if __name__ == "__main__":
+    start = time.time()
     main()
+    end = time.time()
+    print(end-start)

@@ -174,6 +174,15 @@ model.train()
 likelihood.train()
 torch.manual_seed(12345)
 
+# check if gradients are stable
+
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        print(name)
+        print(param.data)
+        print(param.grad)
+
+
 # freeze length scale in the country component in unit covar
 # freeze constant unit means
 all_params = set(model.parameters())
@@ -189,9 +198,10 @@ mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 training_iter = 100
 for i in range(training_iter):
     optimizer.zero_grad()
-    output = model(train_x)
-    loss = -mll(output, train_y)
-    loss.backward()
+    with gpytorch.settings.fast_computations(False, False, False):
+        output = model(train_x)
+        loss = -mll(output, train_y)
+        loss.backward()
     if i % 20 == 0:
         print('Iter %d/%d - Loss: %.3f '  % (
             i , training_iter, loss.item()
