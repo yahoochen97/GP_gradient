@@ -58,10 +58,10 @@ model = GPModel(xs, ys, likelihood).double()
 
 # initialize model parameters
 hypers = {
-    'mean_module.weights': torch.tensor(x_weights), #
+    'mean_module.weights': torch.tensor([0,0,0]), #
     'covar_module.outputscale': 4,
     'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
-    'likelihood.noise': torch.var(ys),
+    'likelihood.noise': 1,
 }    
 
 model = model.initialize(**hypers)
@@ -74,12 +74,12 @@ all_params = set(model.parameters())
 model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
 # model.mean_module.weights.requires_grad = False
-optimizer = torch.optim.Adam(all_params, lr=0.05)
+optimizer = torch.optim.Adam(all_params, lr=0.1)
 
 # "Loss" for GPs - the marginal log likelihood
 mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-training_iter = 500
+training_iter = 1000
 losses = []
 for i in range(training_iter):
     optimizer.zero_grad()
