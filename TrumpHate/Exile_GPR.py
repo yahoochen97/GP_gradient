@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 5000
+num_inducing = 3000
 batch_size = 256
 num_epochs = 100
 
@@ -106,7 +106,7 @@ def main(Y_name):
         'mean_module.weights': torch.tensor([0, 5, 0]),
         'covar_module.outputscale': 1,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
-        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([36]),
+        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([12]),
         't_covar_module.outputscale': 9
     }    
 
@@ -115,8 +115,8 @@ def main(Y_name):
     # initialize model parameters
     model.mean_module.bias.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.requires_grad_(False)
-    model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
-    model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
+    # model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
+    # model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
     likelihood.noise = 9.
 
