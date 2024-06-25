@@ -105,8 +105,8 @@ def main(Y_name):
 
     hypers = {
         'mean_module.bias': torch.mean(ys),
-        'mean_module.weights': torch.tensor([0, 5, 0]),
-        'covar_module.outputscale': 1,
+        'mean_module.weights': torch.tensor([0, 0, 0]),
+        'covar_module.outputscale': 9,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
         't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([12]),
         't_covar_module.outputscale': 9
