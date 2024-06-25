@@ -170,7 +170,7 @@ def main(Y_name):
     results['exile'] = xs[:,3].numpy().astype(int)
 
     test_x0 = xs.clone().detach().requires_grad_(False)
-    test_x0[:,3:5] = 0
+    test_x0[:,3] = 0
 
     # in eval mode the forward() function returns posterioir
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
@@ -193,9 +193,8 @@ def main(Y_name):
     # copy training tesnor to test tensors and set exile to 1 and 0
     test_x1 = xs.clone().detach().requires_grad_(False)
     test_x1[:,3] = 1
-    test_x1[:,4] = test_x1[:,1]
     test_x0 = xs.clone().detach().requires_grad_(False)
-    test_x0[:,3:5] = 0
+    test_x0[:,3] = 0
 
     # in eval mode the forward() function returns posterioir
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
