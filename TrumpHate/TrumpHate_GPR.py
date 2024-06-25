@@ -31,7 +31,7 @@ class GPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super().__init__(train_x, train_y, likelihood)
         # constant country-level mean
-        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
+        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=True)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
     
     def forward(self, x):
