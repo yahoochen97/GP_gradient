@@ -20,9 +20,9 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 4000
+num_inducing = 3000
 batch_size = 256
-num_epochs = 100
+num_epochs = 50
 
 def diff_month(d1, d2):
     d1 = datetime.strptime(d1,"%Y-%m-%d")
@@ -67,13 +67,14 @@ class GPModel(ApproximateGP):
         super(GPModel, self).__init__(variational_strategy)
 
         # linear mean
-        self.mean_module = LinearMean(input_size=(3), bias=True)
-        self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(3), active_dims=[2,3,4]))
+        self.mean_module = LinearMean(input_size=(2), bias=True)
+        self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(2), active_dims=[2,3]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
+        self.g_covar_module = ScaleKernel(RBFKernel(active_dims=[1]))
 
     def forward(self, x):
-        mean_x = self.mean_module(x[:,2:5]) 
-        covar_x =  self.covar_module(x) + self.t_covar_module(x) 
+        mean_x = self.mean_module(x[:,2:4]) 
+        covar_x =  self.covar_module(x) + self.t_covar_module(x)  + self.g_covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 def main(Y_name):
@@ -81,13 +82,13 @@ def main(Y_name):
     data = pd.read_csv("./data/exile.csv")
     data = data[[Y_name, "tweeted_exile", "month","num_tweets", "actor.id"]]
 
-    # xs: unit id, month, log_num_tweets, tweeted_exile, month *  tweeted_exile
+    # xs: unit id, month, log_num_tweets, tweeted_exile
     xs = data.month.apply(lambda x: diff_month(x,"2013-01-01"))
     xs = torch.tensor(np.array([data["actor.id"].astype('category').cat.codes.values.reshape((-1,)),\
                         xs.values.reshape((-1,)),
                         np.log(data.num_tweets.values+1).reshape((-1,)), \
                         data['tweeted_exile'].values.reshape((-1,))]).T)
-    xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
+    # xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
     ys = torch.tensor(data[Y_name].values).double()
 
     to_unit = dict(enumerate(data["actor.id"].astype('category').cat.categories))
@@ -105,11 +106,13 @@ def main(Y_name):
 
     hypers = {
         'mean_module.bias': torch.mean(ys),
-        'mean_module.weights': torch.tensor([0, 0, 0]),
+        'mean_module.weights': torch.tensor([0, 5]),
         'covar_module.outputscale': 9,
-        'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
-        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([12]),
-        't_covar_module.outputscale': 9
+        'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:4],axis=0),
+        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([6]),
+        't_covar_module.outputscale': 4,
+        'g_covar_module.base_kernel.lengthscale': torch.tensor([24]),
+        'g_covar_module.outputscale': 25
     }    
 
     model = model.initialize(**hypers)
@@ -117,10 +120,10 @@ def main(Y_name):
     # initialize model parameters
     model.mean_module.bias.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.requires_grad_(False)
+    model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
     # model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
     # model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
-    model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
-    likelihood.noise = 9.
+    likelihood.noise = 4.
 
     # train model
     model.train()
@@ -214,6 +217,8 @@ def main(Y_name):
     print("BIC: {:0.3f} \n".format(BIC))
 
     print(likelihood.noise)
+    print(model.g_covar_module.outputscale)
+    print(model.g_covar_module.base_kernel.lengthscale)
     print(model.t_covar_module.outputscale)
     print(model.t_covar_module.base_kernel.kernels[1].lengthscale)
     print(model.covar_module.outputscale)
