@@ -66,7 +66,7 @@ class GPModel(ApproximateGP):
         super(GPModel, self).__init__(variational_strategy)
 
         # linear mean
-        self.mean_module = LinearMean(input_size=(3), bias=False)
+        self.mean_module = LinearMean(input_size=(3), bias=True)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(3), active_dims=[2,3,4]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
 
@@ -100,6 +100,7 @@ def main(Y_name):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     hypers = {
+        'mean_module.bias': torch.mean(ys),
         'mean_module.weights': torch.tensor([0, 5, 0]),
         'covar_module.outputscale': 4,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
@@ -110,11 +111,12 @@ def main(Y_name):
     model = model.initialize(**hypers)
 
     # initialize model parameters
-    model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.require_grad = False
-    model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.require_grad = False
-    model.covar_module.base_kernel.raw_lengthscale.require_grad = False
+    model.mean_module.bias.requires_grad_(False)
+    model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.requires_grad_(False)
+    model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
+    model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
-    likelihood.noise = 1.
+    likelihood.noise = 4.
 
     # train model
     model.train()
