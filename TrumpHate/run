@@ -1,0 +1,3 @@
+#!/bin/bash
+# run trump script
+python TrumpHate_GPR.py
