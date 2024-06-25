@@ -58,8 +58,8 @@ model = GPModel(xs, ys, likelihood).double()
 
 # initialize model parameters
 hypers = {
-    'mean_module.weights': torch.tensor([0,0,0]), #
-    'covar_module.outputscale': 1,
+    'mean_module.weights': torch.tensor(x_weights), #
+    'covar_module.outputscale': 4,
     'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
     'likelihood.noise': torch.var(ys),
 }    
@@ -73,7 +73,7 @@ likelihood.train()
 all_params = set(model.parameters())
 model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
-model.mean_module.weights.requires_grad = False
+# model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
 
 # "Loss" for GPs - the marginal log likelihood
@@ -186,7 +186,7 @@ effect = out1.mean.numpy()[election_day_index+1]-out0.mean.numpy()[election_day_
 effect_std = np.sqrt((out1.variance.detach().numpy()[election_day_index+1]\
                       +out0.variance.detach().numpy()[election_day_index-1]))
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (3+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
