@@ -135,7 +135,7 @@ print(model.covar_module.base_kernel.lengthscale)
 # set model and likelihood to evaluation mode
 model.eval()
 likelihood.eval()
-model.covar_module.outputscale = 0.1
+# model.covar_module.outputscale = 0.1
 
 xss = xs.clone().detach().requires_grad_(False)
 xss[:,1] = 0
