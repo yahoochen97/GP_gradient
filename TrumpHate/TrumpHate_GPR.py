@@ -61,7 +61,7 @@ model = GPModel(xs, ys, likelihood).double()
 hypers = {
     'mean_module.weights': torch.tensor(x_weights), #
     'covar_module.outputscale': torch.var(ys),
-    'covar_module.base_kernel.lengthscale': torch.tensor([90.,0.01, 90]),
+    'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
     'likelihood.noise': 1,
 }    
 
