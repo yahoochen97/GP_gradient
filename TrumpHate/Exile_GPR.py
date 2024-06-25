@@ -20,7 +20,8 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 1000
+num_inducing = 2000
+num_epochs = 50
 
 def diff_month(d1, d2):
     d1 = datetime.strptime(d1,"%Y-%m-%d")
@@ -86,7 +87,7 @@ def main(Y_name):
                         np.log(data.num_tweets.values+1).reshape((-1,)), \
                         data['tweeted_exile'].values.reshape((-1,))]).T)
     xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
-    ys = torch.tensor(data.perc_harsh_criticism.values).double()
+    ys = torch.tensor(data[Y_name].values).double()
 
     # define inducing points and learn
     inducing_points = xs[np.random.choice(xs.size(0),num_inducing,replace=False),:]
@@ -100,18 +101,20 @@ def main(Y_name):
 
     hypers = {
         'mean_module.weights': torch.tensor([0, 5, 0]),
-        'covar_module.outputscale': 5**2,
+        'covar_module.outputscale': 4,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
         't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([36]),
-        't_covar_module.outputscale': 3**2
+        't_covar_module.outputscale': 4
     }    
 
     model = model.initialize(**hypers)
 
     # initialize model parameters
     model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.require_grad = False
+    model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.require_grad = False
+    model.covar_module.base_kernel.raw_lengthscale.require_grad = False
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
-    likelihood.noise = 4.
+    likelihood.noise = 1.
 
     # train model
     model.train()
@@ -127,7 +130,6 @@ def main(Y_name):
     # "Loss" for GPs
     mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=ys.size(0))
 
-    num_epochs = 50
     for i in range(num_epochs):
         for j, (x_batch, y_batch) in enumerate(train_loader):
             optimizer.zero_grad()
@@ -201,7 +203,7 @@ def main(Y_name):
     effect = out1.mean.numpy()[xs[:,3]==1].mean() - out0.mean.numpy()[xs[:,3]==1].mean()
     effect_std = np.sqrt((out1.variance.detach().numpy()[xs[:,3]==1].mean()\
                         +out0.variance.detach().numpy()[xs[:,3]==1].mean()))
-    BIC = (1+1+2+1)*\
+    BIC = (3+2+1)*\
         torch.log(torch.tensor(xs.size()[0])) + 2*loss # *xs.size(0)/batch_size
     print("ATE: {:0.3f} +- {:0.3f}\n".format(effect, effect_std))
     print("model evidence: {:0.3f} \n".format(-loss))
