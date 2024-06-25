@@ -89,12 +89,14 @@ def main(Y_name):
                         data['tweeted_exile'].values.reshape((-1,))]).T)
     xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
     ys = torch.tensor(data[Y_name].values).double()
+    del data
 
     # define inducing points and learn
     inducing_points = xs[np.random.choice(xs.size(0),num_inducing,replace=False),:]
     # inducing_points = xs[xs[:,1] % 10==0]
     model = GPModel(inducing_points=inducing_points, unit_num=xs[:,0].unique().size()[0]).double()
     likelihood = GaussianLikelihood().double()
+    del inducing_points
 
     train_dataset = TensorDataset(xs, ys)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
