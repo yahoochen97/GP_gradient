@@ -1,3 +1,10 @@
 #!/bin/bash
-# run trump script
-python TrumpHate_GPR.py
+
+if [ $1 = "trump" ]
+then
+    # run trump script
+    python TrumpHate_GPR.py
+elif [ $1 = "exile" ]
+then
+    python Exile_GPR.py
+fi
