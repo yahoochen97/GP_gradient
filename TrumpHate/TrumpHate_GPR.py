@@ -190,3 +190,46 @@ BIC = (3+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
+
+
+
+
+model.eval()
+likelihood.eval()
+
+# number of empirically sample 
+n_samples = 100
+x_grad = np.zeros((xs.size(0),xs.size(1)))
+sampled_dydtest_x = np.zeros((n_samples, xs.size(0),xs.size(1)))
+
+# we proceed in small batches of size 100 for speed up
+for i in range(xs.size(0)//100):
+    with gpytorch.settings.fast_pred_var():
+        test_x = xs[(i*100):(i*100+100)].clone().detach().requires_grad_(True)
+        observed_pred = model(test_x)
+        dydtest_x = torch.autograd.grad(observed_pred.mean.sum(), test_x, retain_graph=True)[0]
+        x_grad[(i*100):(i*100+100)] = dydtest_x
+
+        sampled_pred = observed_pred.rsample(torch.Size([n_samples]))
+        sampled_dydtest_x[:,(i*100):(i*100+100),:] = torch.stack([torch.autograd.grad(pred.sum(), \
+                                    test_x, retain_graph=True)[0] for pred in sampled_pred])
+        
+# last 100 rows
+with gpytorch.settings.fast_pred_var():
+    test_x = xs[(100*i+100):].clone().detach().requires_grad_(True)
+    observed_pred = model(test_x)
+    dydtest_x = torch.autograd.grad(observed_pred.mean.sum(), test_x, retain_graph=True)[0]
+    x_grad[(100*i+100):] = dydtest_x
+
+    sampled_pred = observed_pred.rsample(torch.Size([n_samples]))
+    sampled_dydtest_x[:,(100*i+100):,:] = torch.stack([torch.autograd.grad(pred.sum(),\
+                                     test_x, retain_graph=True)[0] for pred in sampled_pred])
+
+est_std = np.sqrt(sampled_dydtest_x.var((0,1))/xs.size(0)/n_samples).round(decimals=16)
+covariate_names = ["beta1", "beta2", "beta3"]
+results = pd.DataFrame({"x": covariate_names, \
+                        'est_mean': x_grad.mean(axis=0)[[0,1,2]]/ys_scale,
+                        'est_std': est_std[[0,1,2]]/ys_scale})
+results["t"] = results['est_mean'].values/results['est_std'].values
+results["pvalue"] = norm.cdf(-np.abs(results["t"].values))
+print(results)
