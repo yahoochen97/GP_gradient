@@ -20,7 +20,8 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 3000
+num_inducing = 5000
+batch_size = 256
 num_epochs = 100
 
 def diff_month(d1, d2):
@@ -96,7 +97,6 @@ def main(Y_name):
     likelihood = GaussianLikelihood().double()
 
     train_dataset = TensorDataset(xs, ys)
-    batch_size = 512
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     hypers = {
