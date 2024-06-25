@@ -31,8 +31,7 @@ class GPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super().__init__(train_x, train_y, likelihood)
         # constant country-level mean
-        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
-        # self.mean_module = ZeroMean()
+        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=True)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
     
     def forward(self, x):
@@ -187,7 +186,7 @@ effect = out1.mean.numpy()[election_day_index+1]-out0.mean.numpy()[election_day_
 effect_std = np.sqrt((out1.variance.detach().numpy()[election_day_index+1]\
                       +out0.variance.detach().numpy()[election_day_index-1]))
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (3+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (4+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
