@@ -61,7 +61,7 @@ hypers = {
     'mean_module.weights': torch.tensor(x_weights), #
     'covar_module.outputscale': torch.var(ys),
     'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
-    'likelihood.noise': torch.var(ys),
+    'likelihood.noise': 1,
 }    
 
 model = model.initialize(**hypers)
@@ -79,14 +79,14 @@ optimizer = torch.optim.Adam(all_params, lr=0.05)
 # "Loss" for GPs - the marginal log likelihood
 mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-training_iter = 200
+training_iter = 500
 losses = []
 for i in range(training_iter):
     optimizer.zero_grad()
     output = model(xs)
     loss = -mll(output, ys)
     loss.backward()
-    if i % 50 == 0:
+    if i % 100 == 0:
         print('Iter %d/%d - Loss: %.3f '  % (
             i , training_iter, loss.item()
         ))
