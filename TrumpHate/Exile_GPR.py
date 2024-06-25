@@ -89,6 +89,8 @@ def main(Y_name):
                         data['tweeted_exile'].values.reshape((-1,))]).T)
     xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
     ys = torch.tensor(data[Y_name].values).double()
+
+    to_unit = dict(enumerate(data["actor.id"].astype('category').cat.categories))
     del data
 
     # define inducing points and learn
@@ -154,8 +156,6 @@ def main(Y_name):
         loss = -mll(out, ys)
         mu_f = out.mean.numpy()
         lower, upper = out.confidence_region()
-
-    to_unit = dict(enumerate(data["actor.id"].astype('category').cat.categories))
 
     # store results
     results = pd.DataFrame({"gpr_mean":mu_f})
