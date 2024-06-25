@@ -71,7 +71,7 @@ model.train()
 likelihood.train()
 
 all_params = set(model.parameters())
-model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
+# model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
 # model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
@@ -135,7 +135,7 @@ print(model.covar_module.base_kernel.lengthscale)
 # set model and likelihood to evaluation mode
 model.eval()
 likelihood.eval()
-# model.covar_module.outputscale = 0.1
+model.covar_module.outputscale = 0.1
 
 xss = xs.clone().detach().requires_grad_(False)
 xss[:,1] = 0
@@ -186,7 +186,7 @@ effect = out1.mean.numpy()[election_day_index+1]-out0.mean.numpy()[election_day_
 effect_std = np.sqrt((out1.variance.detach().numpy()[election_day_index+1]\
                       +out0.variance.detach().numpy()[election_day_index-1]))
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (3+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (3+3)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
