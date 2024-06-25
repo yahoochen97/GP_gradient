@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 10000
+num_inducing = 5000
 
 def diff_month(d1, d2):
     d1 = datetime.strptime(d1,"%Y-%m-%d")
