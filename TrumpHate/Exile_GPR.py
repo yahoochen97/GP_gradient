@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 2000
+num_inducing = 3000
 num_epochs = 50
 
 def diff_month(d1, d2):
@@ -102,10 +102,10 @@ def main(Y_name):
     hypers = {
         'mean_module.bias': torch.mean(ys),
         'mean_module.weights': torch.tensor([0, 5, 0]),
-        'covar_module.outputscale': 4,
+        'covar_module.outputscale': 1,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:5],axis=0),
         't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([36]),
-        't_covar_module.outputscale': 4
+        't_covar_module.outputscale': 9
     }    
 
     model = model.initialize(**hypers)
@@ -116,7 +116,7 @@ def main(Y_name):
     model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
     model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
-    likelihood.noise = 4.
+    likelihood.noise = 9.
 
     # train model
     model.train()
@@ -230,7 +230,7 @@ def main(Y_name):
     for i in range(xs.size(0)//100):
         with gpytorch.settings.fast_pred_var():
             test_x = xs[(i*100):(i*100+100)].clone().detach().requires_grad_(True)
-            observed_pred = model(test_x)
+            observed_pred = likelihood(model(test_x))
             dydtest_x = torch.autograd.grad(observed_pred.mean.sum(), test_x, retain_graph=True)[0]
             x_grad[(i*100):(i*100+100)] = dydtest_x
 
@@ -241,7 +241,7 @@ def main(Y_name):
     # last 100 rows
     with gpytorch.settings.fast_pred_var():
         test_x = xs[(100*i+100):].clone().detach().requires_grad_(True)
-        observed_pred = model(test_x)
+        observed_pred = likelihood(model(test_x))
         dydtest_x = torch.autograd.grad(observed_pred.mean.sum(), test_x, retain_graph=True)[0]
         x_grad[(100*i+100):] = dydtest_x
 
@@ -254,8 +254,8 @@ def main(Y_name):
 
     covariate_names = ["log_num_tweets"]
     results = pd.DataFrame({"x": covariate_names, \
-                            'est_mean': x_grad.mean(axis=0)[2:3],
-                            'est_std': est_std[2:3]})
+                            'est_mean': x_grad.mean(axis=0)[2],
+                            'est_std': est_std[2]})
     results["t"] = results['est_mean'].values/results['est_std'].values
     results["pvalue"] = 1 - norm.cdf(np.abs(results["t"].values))
     print(results)
