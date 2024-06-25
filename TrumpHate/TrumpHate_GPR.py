@@ -61,7 +61,7 @@ hypers = {
     'mean_module.bias': torch.tensor([0.]),
     'mean_module.weights': torch.tensor([0,0, 0]), #
     'covar_module.outputscale': torch.var(ys),
-    'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
+    'covar_module.base_kernel.lengthscale': torch.tensor([90.,0.01, 90]),
     'likelihood.noise': 1,
 }    
 
@@ -72,7 +72,7 @@ model.train()
 likelihood.train()
 
 all_params = set(model.parameters())
-# model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
+model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
 # model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
@@ -85,7 +85,7 @@ losses = []
 for i in range(training_iter):
     optimizer.zero_grad()
     output = model(xs)
-    loss = -mll(output, ys) - np.log(ys_scale)
+    loss = -mll(output, ys)
     loss.backward()
     if i % 100 == 0:
         print('Iter %d/%d - Loss: %.3f '  % (
@@ -187,7 +187,7 @@ effect = out1.mean.numpy()[election_day_index+1]-out0.mean.numpy()[election_day_
 effect_std = np.sqrt((out1.variance.detach().numpy()[election_day_index+1]\
                       +out0.variance.detach().numpy()[election_day_index-1]))
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (3+2+2)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (4+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
