@@ -65,12 +65,12 @@ class GPModel(ApproximateGP):
         super(GPModel, self).__init__(variational_strategy)
 
         # linear mean
-        self.mean_module = LinearMean(input_size=(3), active_dims=[2,3,4], bias=False)
+        self.mean_module = LinearMean(input_size=(3), bias=False)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(3), active_dims=[2,3,4]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
 
     def forward(self, x):
-        mean_x = self.mean_module(x) 
+        mean_x = self.mean_module(x[:,2:5]) 
         covar_x =  self.covar_module(x) + self.t_covar_module(x) 
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
@@ -87,8 +87,6 @@ def main(Y_name):
                         data['tweeted_exile'].values.reshape((-1,))]).T)
     xs = torch.cat((xs, (xs[:, 1] * xs[:, -1]).reshape(-1,1)), dim=1)
     ys = torch.tensor(data.perc_harsh_criticism.values).double()
-
-    breakpoint()
 
     # define inducing points and learn
     inducing_points = xs[np.random.choice(xs.size(0),num_inducing,replace=False),:]
