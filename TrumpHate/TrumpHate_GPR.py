@@ -138,8 +138,8 @@ likelihood.eval()
 model.covar_module.outputscale = 0.1
 
 xss = xs.clone().detach().requires_grad_(False)
-# xss[:,1] = 0
-xss[:,2] = 0
+xss[:,1] = 0
+# xss[:,2] = 0
 with torch.no_grad():
     out0 = model(xss)
     mu_f0 = out0.mean.numpy()
