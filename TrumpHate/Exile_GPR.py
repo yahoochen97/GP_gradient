@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 3000
+num_inducing = 2000
 batch_size = 256
 num_epochs = 20
 
@@ -68,8 +68,8 @@ class GPModel(ApproximateGP):
         super(GPModel, self).__init__(variational_strategy)
 
         # linear mean
-        self.mean_module = LinearMean(input_size=(2), bias=True)
-        self.unit_mean = torch.nn.ModuleList([LinearMean(input_size=(1),bias=False) for _ in range(unit_num)])
+        self.mean_module = LinearMean(input_size=(2), bias=False)
+        self.unit_mean = torch.nn.ModuleList([LinearMean(input_size=(1),bias=True) for _ in range(unit_num)])
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(2), active_dims=[2,3]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
         self.g_covar_module = ScaleKernel(RBFKernel(active_dims=[1]))
@@ -109,7 +109,6 @@ def main(Y_name):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     hypers = {
-        'mean_module.bias': torch.mean(ys),
         'mean_module.weights': torch.tensor([0, 5]),
         'covar_module.outputscale': 9,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:4],axis=0),
