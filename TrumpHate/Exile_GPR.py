@@ -68,7 +68,7 @@ class GPModel(ApproximateGP):
 
         # linear mean
         self.mean_module = LinearMean(input_size=(2), bias=True)
-        self.unit_mean = torch.nn.ModuleList([LinearMean(inputsize=(1),bias=False) for _ in range(unit_num)])
+        self.unit_mean = torch.nn.ModuleList([LinearMean(input_size=(1),bias=False) for _ in range(unit_num)])
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(2), active_dims=[2,3]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
         self.g_covar_module = ScaleKernel(RBFKernel(active_dims=[1]))
