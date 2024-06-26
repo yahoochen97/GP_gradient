@@ -22,7 +22,7 @@ torch.manual_seed(12345)
 
 num_inducing = 3000
 batch_size = 256
-num_epochs = 100
+num_epochs = 20
 
 def diff_month(d1, d2):
     d1 = datetime.strptime(d1,"%Y-%m-%d")
@@ -68,12 +68,15 @@ class GPModel(ApproximateGP):
 
         # linear mean
         self.mean_module = LinearMean(input_size=(2), bias=True)
+        self.unit_mean = torch.nn.ModuleList([LinearMean(inputsize=(1),bias=False) for _ in range(unit_num)])
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=(2), active_dims=[2,3]))
         self.t_covar_module = ScaleKernel(RBFKernel(active_dims=[0])*RBFKernel(active_dims=[1]))
         self.g_covar_module = ScaleKernel(RBFKernel(active_dims=[1]))
 
     def forward(self, x):
-        mean_x = self.mean_module(x[:,2:4]) 
+        mean_x = self.mean_module(x[:,2:]) 
+        for i in range(x.shape[0]):
+            mean_x[i] += self.unit_mean[x[i,0]](x[i,1])
         covar_x =  self.covar_module(x) + self.t_covar_module(x)  + self.g_covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
