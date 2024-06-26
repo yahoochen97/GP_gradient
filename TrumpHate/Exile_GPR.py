@@ -62,6 +62,7 @@ class MaskMean(gpytorch.means.mean.Mean):
 
 class GPModel(ApproximateGP):
     def __init__(self, inducing_points, unit_num):
+        self.unit_num = unit_num
         variational_distribution = CholeskyVariationalDistribution(inducing_points.size(0))
         variational_strategy = VariationalStrategy(self, inducing_points, variational_distribution, learn_inducing_locations=False)
         super(GPModel, self).__init__(variational_strategy)
@@ -75,9 +76,8 @@ class GPModel(ApproximateGP):
 
     def forward(self, x):
         mean_x = self.mean_module(x[:,2:]) 
-        for i in range(x.shape[0]):
-            breakpoint()
-            mean_x[i] += self.unit_mean[x[i,0].long()](x[i,1])
+        for i in range(self.unit_num):
+            mean_x[x[:,0]==i] += self.unit_mean[i](x[i,1].reshape((-1,1)))
         covar_x =  self.covar_module(x) + self.t_covar_module(x)  + self.g_covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
