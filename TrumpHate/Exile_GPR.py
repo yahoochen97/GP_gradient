@@ -109,10 +109,10 @@ def main(Y_name):
         'mean_module.weights': torch.tensor([0, 5]),
         'covar_module.outputscale': 9,
         'covar_module.base_kernel.lengthscale': torch.std(xs[:,2:4],axis=0),
-        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([6]),
+        't_covar_module.base_kernel.kernels.1.lengthscale': torch.tensor([12]),
         't_covar_module.outputscale': 4,
         'g_covar_module.base_kernel.lengthscale': torch.tensor([24]),
-        'g_covar_module.outputscale': 25
+        'g_covar_module.outputscale': 9
     }    
 
     model = model.initialize(**hypers)
@@ -123,7 +123,7 @@ def main(Y_name):
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
     # model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
     # model.covar_module.base_kernel.raw_lengthscale.requires_grad_(False)
-    likelihood.noise = 4.
+    likelihood.noise = 9.
 
     # train model
     model.train()
