@@ -22,7 +22,7 @@ torch.manual_seed(12345)
 
 num_inducing = 3000
 batch_size = 256
-num_epochs = 50
+num_epochs = 100
 
 def diff_month(d1, d2):
     d1 = datetime.strptime(d1,"%Y-%m-%d")
