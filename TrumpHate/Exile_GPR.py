@@ -76,7 +76,7 @@ class GPModel(ApproximateGP):
     def forward(self, x):
         mean_x = self.mean_module(x[:,2:]) 
         for i in range(x.shape[0]):
-            mean_x[i] += self.unit_mean[x[i,0]](x[i,1])
+            mean_x[i] += self.unit_mean[x[i,0].long()](x[i,1])
         covar_x =  self.covar_module(x) + self.t_covar_module(x)  + self.g_covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
