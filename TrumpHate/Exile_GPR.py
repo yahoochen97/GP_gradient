@@ -121,7 +121,6 @@ def main(Y_name):
     model = model.initialize(**hypers)
 
     # initialize model parameters
-    model.mean_module.bias.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].raw_lengthscale.requires_grad_(False)
     model.t_covar_module.base_kernel.kernels[0].lengthscale = 0.01
     # model.t_covar_module.base_kernel.kernels[1].raw_lengthscale.requires_grad_(False)
