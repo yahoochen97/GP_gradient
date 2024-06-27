@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader
 torch.set_default_dtype(torch.float64)
 torch.manual_seed(12345)
 
-num_inducing = 4000
+num_inducing = 3000
 batch_size = 256
 num_epochs = 50
 
