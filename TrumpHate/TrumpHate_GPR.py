@@ -83,7 +83,7 @@ optimizer = torch.optim.Adam(all_params, lr=0.05)
 # "Loss" for GPs - the marginal log likelihood
 mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-training_iter = 100
+training_iter = 500
 losses = []
 for i in range(training_iter):
     optimizer.zero_grad()
