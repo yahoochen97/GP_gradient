@@ -182,10 +182,11 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
     out0 = model(test_x0)
 
 # compute ATE and its uncertainty
-mask = (xs[:,0] >= election_day_index) & (xs[:,1]==1)
-effect = out1[mask].mean.numpy()[election_day_index+1]-out0[mask].mean.numpy()[election_day_index-1]
-effect_std = np.sqrt((out1[mask].variance.detach().numpy()[election_day_index+1]\
-                      +out0[mask].variance.detach().numpy()[election_day_index-1]))
+mask1 = (xs[:,0] == election_day_index + 1) & (xs[:,1]==1)
+mask2 = (xs[:,0] == election_day_index - 1) & (xs[:,1]==1)
+effect = out1[mask1].mean.numpy()-out0[mask2].mean.numpy()
+effect_std = np.sqrt((out1[mask1].variance.detach().numpy()\
+                      +out0[mask2].variance.detach().numpy()))
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
 BIC = (3+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
