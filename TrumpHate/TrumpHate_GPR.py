@@ -62,7 +62,7 @@ model = GPModel(xs, ys, likelihood).double()
 # initialize model parameters
 hypers = {
     'mean_module.weights': torch.tensor([0]), #
-    'covar_module.outputscale': torch.var(ys),
+    'covar_module.outputscale': 1,
     'covar_module.base_kernel.lengthscale': torch.tensor([90.]), # 90.,10, 90
     'likelihood.noise': 1,
 }    
@@ -75,6 +75,7 @@ likelihood.train()
 
 all_params = set(model.parameters())
 model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
+model.covar_module.raw_outputscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
 # model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
