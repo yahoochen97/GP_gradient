@@ -139,7 +139,7 @@ model.covar_module.outputscale = 0.1
 
 xss = xs.clone().detach().requires_grad_(False)
 xss[:,1] = 0
-xss[:,2] = 0
+# xss[:,2] = 0
 with torch.no_grad():
     out0 = model(xss)
     mu_f0 = out0.mean.numpy()
@@ -174,7 +174,7 @@ test_x1[:,1] = 1
 test_x1[:,2] = test_x1[:,0]
 test_x0 = xs.clone().detach().requires_grad_(False)
 test_x0[:,1] = 0
-test_x0[:,2] = 0
+# test_x0[:,2] = 0
 
 # in eval mode the forward() function returns posterioir
 with torch.no_grad(), gpytorch.settings.fast_pred_var():
