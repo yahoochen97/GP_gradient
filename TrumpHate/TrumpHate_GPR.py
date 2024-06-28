@@ -35,10 +35,11 @@ class GPModel(gpytorch.models.ExactGP):
         # constant country-level mean
         # self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
         self.mean_module = LinearMean(input_size=(1), bias=False)
-        self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
+        # self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
+        self.covar_module = ScaleKernel(RBFKernel(active_dims=[1]))
     
     def forward(self, x):
-        mean_x = self.mean_module(x)
+        mean_x = self.mean_module(x[:,1])
         covar_x = self.covar_module(x)
         
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
@@ -62,7 +63,7 @@ model = GPModel(xs, ys, likelihood).double()
 hypers = {
     'mean_module.weights': torch.tensor([0]), #
     'covar_module.outputscale': torch.var(ys),
-    'covar_module.base_kernel.lengthscale': torch.tensor([90.,10, 90]),
+    'covar_module.base_kernel.lengthscale': torch.tensor([10]), # 90.,10, 90
     'likelihood.noise': 1,
 }    
 
