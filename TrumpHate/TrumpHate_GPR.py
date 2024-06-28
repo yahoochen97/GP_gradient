@@ -187,6 +187,7 @@ mask0 = (xs[:,0] == election_day_index) & (xs[:,1]==1)
 effect = out1.mean.numpy()[mask1]-out0.mean.numpy()[mask0]
 effect_std = np.sqrt((out1.variance.detach().numpy()[mask1]\
                       + out0.variance.detach().numpy()[mask0]))
+breakpoint()
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
 BIC = (3+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
