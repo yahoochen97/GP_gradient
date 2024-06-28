@@ -146,7 +146,7 @@ with torch.no_grad():
     lower0, upper0 = out0.confidence_region()
 
 f, ax = plt.subplots(1, 1, figsize=(12, 6))
-ax.vlines(xs[:,0].numpy(), ys.numpy()/ys_scale, color='k')
+ax.vlines(xs[:,0].numpy(), 0*ys.numpy(), ys.numpy()/ys_scale, color='k')
 ax.plot(xs[:,0].numpy(), out.mean.numpy()/ys_scale, 'b')
 ax.fill_between(xs[:,0].numpy(), lower.numpy()/ys_scale, upper.numpy()/ys_scale, alpha=0.5)
 
