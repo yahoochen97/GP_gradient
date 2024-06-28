@@ -117,7 +117,7 @@ ax.plot(xs[:,0].numpy(), out.mean.numpy()/ys_scale, 'b')
 ax.fill_between(xs[:,0].numpy(), lower.numpy()/ys_scale, upper.numpy()/ys_scale, alpha=0.5)
 ax.axvline(x=election_day_index, ls="--")
 ax.text(election_day_index-80, ys.numpy().max()/ys_scale, "Election Day", rotation=0, verticalalignment='center')
-ax.legend(['Data', 'GPR mean', '95% CI'])
+ax.legend(['Data', 'GPR mean', '95% CI'], frameon=False)
 ax.set_xlabel("Date")
 ax.set_ylabel("Daily Proportion of Tweets")
 ax.set_xticks(np.arange(xs[:,0].min().data,xs[:,0].max().data,120))
@@ -156,7 +156,8 @@ ax.fill_between(xs[:,0].numpy()[xs[:,1]==1], lower0.numpy()[xs[:,1]==1]/ys_scale
 
 ax.axvline(x=election_day_index, ls="--")
 ax.text(election_day_index-80, ys.numpy().max()/ys_scale, "Election Day", rotation=0, verticalalignment='center')
-ax.legend(['Data', 'Factual mean', 'Factual 95% CI', 'Counterfactual mean', 'Counterfactual 95% CI'], loc=2)
+ax.legend(['Data', 'Factual mean', 'Factual 95% CI', 'Counterfactual mean',\
+            'Counterfactual 95% CI'], loc=2, frameon=False)
 ax.set_xlabel("Date")
 ax.set_ylabel("Daily Proportion of Tweets")
 ax.set_xticks(np.arange(xs[:,0].min().data,xs[:,0].max().data,120))
