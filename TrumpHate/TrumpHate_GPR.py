@@ -132,41 +132,6 @@ print(likelihood.noise)
 print(model.covar_module.outputscale)
 print(model.covar_module.base_kernel.lengthscale)
 
-# set model and likelihood to evaluation mode
-model.eval()
-likelihood.eval()
-model.covar_module.outputscale = 0.1
-
-xss = xs.clone().detach().requires_grad_(False)
-xss[:,1] = 0
-xss[:,2] = 0
-with torch.no_grad():
-    out0 = model(xss)
-    mu_f0 = out0.mean.numpy()
-    lower0, upper0 = out0.confidence_region()
-
-f, ax = plt.subplots(1, 1, figsize=(12, 6))
-ax.vlines(xs[:,0].numpy(), 0*ys.numpy(), ys.numpy()/ys_scale, color='k')
-ax.plot(xs[:,0].numpy(), out.mean.numpy()/ys_scale, 'b')
-ax.fill_between(xs[:,0].numpy(), lower.numpy()/ys_scale, upper.numpy()/ys_scale, alpha=0.5)
-
-ax.plot(xs[:,0].numpy()[xs[:,1]==1], out0.mean.numpy()[xs[:,1]==1]/ys_scale, 'g')
-ax.fill_between(xs[:,0].numpy()[xs[:,1]==1], lower0.numpy()[xs[:,1]==1]/ys_scale, \
-                upper0.numpy()[xs[:,1]==1]/ys_scale, alpha=0.5)
-
-ax.axvline(x=election_day_index, ls="--")
-ax.text(election_day_index-80, ys.numpy().max()/ys_scale, "Election Day", rotation=0, verticalalignment='center')
-ax.legend(['Data', 'Factual mean', 'Factual 95% CI', 'Counterfactual mean',\
-            'Counterfactual 95% CI'], loc=2, frameon=False)
-ax.set_xlabel("Date")
-ax.set_ylabel("Daily Proportion of Tweets")
-ax.set_xticks(np.arange(xs[:,0].min().data,xs[:,0].max().data,120))
-ax.set_xticklabels(["06-2015","10-2015","02-2016","06-2016","10-2016","02-2017","06-2017"])
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-plt.savefig("./results/trumphate_est.pdf", dpi=100)
-
-
 
 
 # copy training tesnor to test tensors and set election to 1 and 0
@@ -204,6 +169,43 @@ effect_std = np.sqrt((out1.variance.detach().numpy()[mask1].mean()\
 
 print("ATE: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
 
+
+# set model and likelihood to evaluation mode
+model.eval()
+likelihood.eval()
+model.covar_module.outputscale = 0.1
+
+xss = xs.clone().detach().requires_grad_(False)
+xss[:,1] = 0
+xss[:,2] = 0
+with torch.no_grad():
+    out0 = model(xss)
+    mu_f0 = out0.mean.numpy()
+    lower0, upper0 = out0.confidence_region()
+
+f, ax = plt.subplots(1, 1, figsize=(12, 6))
+ax.vlines(xs[:,0].numpy(), 0*ys.numpy(), ys.numpy()/ys_scale, color='k')
+ax.plot(xs[:,0].numpy(), out.mean.numpy()/ys_scale, 'b')
+ax.fill_between(xs[:,0].numpy(), lower.numpy()/ys_scale, upper.numpy()/ys_scale, alpha=0.5)
+
+ax.plot(xs[:,0].numpy()[xs[:,1]==1], out0.mean.numpy()[xs[:,1]==1]/ys_scale, 'g')
+ax.fill_between(xs[:,0].numpy()[xs[:,1]==1], lower0.numpy()[xs[:,1]==1]/ys_scale, \
+                upper0.numpy()[xs[:,1]==1]/ys_scale, alpha=0.5)
+
+ax.axvline(x=election_day_index, ls="--")
+ax.text(election_day_index-80, ys.numpy().max()/ys_scale, "Election Day", rotation=0, verticalalignment='center')
+ax.text(election_day_index-200, ys.numpy().max()/ys_scale - 0.2, "ATE: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale), \
+        rotation=0, verticalalignment='center', color='gray')
+
+ax.legend(['Data', 'Factual mean', 'Factual 95% CI', 'Counterfactual mean',\
+            'Counterfactual 95% CI'], loc='best', frameon=False)
+ax.set_xlabel("Date")
+ax.set_ylabel("Daily Proportion of Tweets")
+ax.set_xticks(np.arange(xs[:,0].min().data,xs[:,0].max().data,120))
+ax.set_xticklabels(["06-2015","10-2015","02-2016","06-2016","10-2016","02-2017","06-2017"])
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.savefig("./results/trumphate_est.pdf", dpi=100)
 
 
 
