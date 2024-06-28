@@ -196,7 +196,7 @@ ax.fill_between(xs[:,0].numpy()[xs[:,1]==1], lower0.numpy()[xs[:,1]==1]/ys_scale
 
 ax.axvline(x=election_day_index, ls="--")
 ax.text(election_day_index-80, ys.numpy().max()/ys_scale, "Election Day", rotation=0, verticalalignment='center')
-ax.text(election_day_index-250, ys.numpy().max()/ys_scale - 0.6 / ys_scale, "ATE: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale), \
+ax.text(election_day_index-250, ys.numpy().max()/ys_scale - 3.6 / ys_scale, "ATE: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale), \
         rotation=0, verticalalignment='center', color='gray')
 
 ax.legend(['Data', 'Factual mean', 'Factual 95% CI', 'Counterfactual mean',\
