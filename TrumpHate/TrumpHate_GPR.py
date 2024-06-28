@@ -195,6 +195,15 @@ print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
 
 
+# compute ATE and its uncertainty
+mask1 = (xs[:,0] >= election_day_index ) & (xs[:,1]==1)
+effect = out1.mean.numpy()[mask1].mean()-out0.mean.numpy()[mask1].mean()
+effect_std = np.sqrt((out1.variance.detach().numpy()[mask1].mean()\
+                      + out0.variance.detach().numpy()[mask1].mean()))
+
+print("ATE: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
+
+
 
 
 model.eval()
