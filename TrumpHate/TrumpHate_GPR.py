@@ -157,7 +157,7 @@ effect_std = np.sqrt((out1.variance.detach().numpy()[mask1]\
                       + out0.variance.detach().numpy()[mask0]))[0]
 
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (4+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (0+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
