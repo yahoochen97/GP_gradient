@@ -60,7 +60,7 @@ model = GPModel(xs, ys, likelihood).double()
 hypers = {
     'mean_module.weights': torch.tensor(x_weights), #
     'covar_module.outputscale': torch.var(ys),
-    'covar_module.base_kernel.lengthscale': torch.tensor([7.,1, 7]),
+    'covar_module.base_kernel.lengthscale': torch.tensor([90.,1, 90]),
     'likelihood.noise': 1,
 }    
 
@@ -146,7 +146,7 @@ with torch.no_grad():
     lower0, upper0 = out0.confidence_region()
 
 f, ax = plt.subplots(1, 1, figsize=(12, 6))
-ax.scatter(xs[:,0].numpy(), ys.numpy()/ys_scale, color='k', s=6)
+ax.vlines(xs[:,0].numpy(), ys.numpy()/ys_scale, color='k')
 ax.plot(xs[:,0].numpy(), out.mean.numpy()/ys_scale, 'b')
 ax.fill_between(xs[:,0].numpy(), lower.numpy()/ys_scale, upper.numpy()/ys_scale, alpha=0.5)
 
