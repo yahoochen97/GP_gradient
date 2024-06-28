@@ -33,11 +33,12 @@ class GPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super().__init__(train_x, train_y, likelihood)
         # constant country-level mean
-        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
+        # self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
+        self.mean_module = LinearMean(input_size=(1), bias=False)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
     
     def forward(self, x):
-        mean_x = self.mean_module(x)
+        mean_x = self.mean_module(x[:,1])
         covar_x = self.covar_module(x)
         
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
@@ -49,7 +50,6 @@ lm = sm.ols('norm_hate ~ time_index + election + time_index:election - 1', data)
 coefs = lm.params.to_dict()
 covariate_names = ["time_index" ,"election" , "time_index:election"]
 x_weights = list(map(coefs.get, covariate_names))
-print(lm.summary())
 
 
 torch.set_default_dtype(torch.float64)
@@ -60,7 +60,7 @@ model = GPModel(xs, ys, likelihood).double()
 
 # initialize model parameters
 hypers = {
-    'mean_module.weights': torch.tensor([0,0,0]), #
+    'mean_module.weights': torch.tensor([0]), #
     'covar_module.outputscale': torch.var(ys),
     'covar_module.base_kernel.lengthscale': torch.tensor([90.,10, 90]),
     'likelihood.noise': 1,
@@ -75,7 +75,7 @@ likelihood.train()
 all_params = set(model.parameters())
 model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
-model.mean_module.weights.requires_grad = False
+# model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
 
 # "Loss" for GPs - the marginal log likelihood
@@ -157,7 +157,7 @@ effect_std = np.sqrt((out1.variance.detach().numpy()[mask1]\
                       + out0.variance.detach().numpy()[mask0]))[0]
 
 print("instaneous shift on Election Day: {:.2E} +- {:.2E}\n".format(effect/ys_scale, effect_std/ys_scale))
-BIC = (0+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
+BIC = (1+1+1)*torch.log(torch.tensor(xs.size(0))) + 2*loss*xs.size()[0]
 print(norm.cdf(-np.abs(effect/effect_std)))
 print("log lik: {:4.4f} \n".format(-loss.numpy()*xs.size(0)))
 print("BIC: {:0.3f} \n".format(BIC))
