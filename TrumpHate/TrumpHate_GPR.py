@@ -182,9 +182,8 @@ with torch.no_grad(), gpytorch.settings.fast_pred_var():
     out0 = model(test_x0)
 
 # compute ATE and its uncertainty
-breakpoint()
 mask1 = (xs[:,0] == election_day_index + 1) & (xs[:,1]==1)
-mask0 = (xs[:,0] == election_day_index - 1) & (xs[:,1]==1)
+mask0 = (xs[:,0] == election_day_index) & (xs[:,1]==1)
 effect = out1.mean.numpy()[mask1]-out0.mean.numpy()[mask0]
 effect_std = np.sqrt((out1.variance.detach().numpy()[mask1]\
                       + out0.variance.detach().numpy()[mask0]))
