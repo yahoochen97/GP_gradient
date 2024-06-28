@@ -75,7 +75,7 @@ likelihood.train()
 
 all_params = set(model.parameters())
 model.covar_module.base_kernel.raw_lengthscale.requires_grad = False
-model.covar_module.raw_outputscale.requires_grad = False
+# model.covar_module.raw_outputscale.requires_grad = False
 # model.covar_module.raw_outputscale.requires_grad = False
 # model.mean_module.weights.requires_grad = False
 optimizer = torch.optim.Adam(all_params, lr=0.05)
@@ -83,14 +83,14 @@ optimizer = torch.optim.Adam(all_params, lr=0.05)
 # "Loss" for GPs - the marginal log likelihood
 mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
-training_iter = 500
+training_iter = 100
 losses = []
 for i in range(training_iter):
     optimizer.zero_grad()
     output = model(xs)
     loss = -mll(output, ys)
     loss.backward()
-    if i % 100 == 0:
+    if i % 20 == 0:
         print('Iter %d/%d - Loss: %.3f '  % (
             i , training_iter, loss.item()
         ))
