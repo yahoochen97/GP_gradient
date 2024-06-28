@@ -33,12 +33,12 @@ class GPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super().__init__(train_x, train_y, likelihood)
         # constant country-level mean
-        self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
-        # self.mean_module = LinearMean(input_size=(1), bias=False)
+        # self.mean_module = LinearMean(input_size=train_x.shape[1], bias=False)
+        self.mean_module = LinearMean(input_size=(1), bias=False)
         self.covar_module = ScaleKernel(RBFKernel(ard_num_dims=train_x.shape[1]))
     
     def forward(self, x):
-        mean_x = self.mean_module(x)
+        mean_x = self.mean_module(x[:,1])
         covar_x = self.covar_module(x)
         
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
@@ -60,7 +60,7 @@ model = GPModel(xs, ys, likelihood).double()
 
 # initialize model parameters
 hypers = {
-    'mean_module.weights': torch.tensor([0,0,0]), #
+    'mean_module.weights': torch.tensor([0]), #
     'covar_module.outputscale': torch.var(ys),
     'covar_module.base_kernel.lengthscale': torch.tensor([90.,10, 90]),
     'likelihood.noise': 1,
@@ -138,10 +138,10 @@ print(model.covar_module.base_kernel.lengthscale)
 
 # copy training tesnor to test tensors and set election to 1 and 0
 test_x1 = xs.clone().detach().requires_grad_(False)
-test_x1[:,1] = 1
+# test_x1[:,1] = 1
 test_x1[:,2] = test_x1[:,0]
 test_x0 = xs.clone().detach().requires_grad_(False)
-test_x0[:,1] = 0
+# test_x0[:,1] = 0
 test_x0[:,2] = 0
 
 # in eval mode the forward() function returns posterioir
@@ -178,7 +178,7 @@ likelihood.eval()
 model.covar_module.outputscale = 0.1
 
 xss = xs.clone().detach().requires_grad_(False)
-xss[:,1] = 0
+# xss[:,1] = 0
 xss[:,2] = 0
 with torch.no_grad():
     out0 = model(xss)
