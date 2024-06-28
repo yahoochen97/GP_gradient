@@ -10,6 +10,8 @@ from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.kernels import ScaleKernel, RBFKernel, PeriodicKernel, CosineKernel
 from datetime import datetime
 
+torch.manual_seed(12345)
+
 # read data
 data = pd.read_csv("./data/white_nationalist_random.csv")
 
